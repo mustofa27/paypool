@@ -17,7 +17,8 @@
                     <div class="flex-shrink-0 flex items-center">
                         <h1 class="text-2xl font-bold text-indigo-600">PayPool</h1>
                     </div>
-                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                    <!-- Desktop Menu -->
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
                         <a href="{{ route('admin.dashboard') }}" class="@if(request()->routeIs('admin.dashboard')) border-indigo-500 text-gray-900 @else border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 @endif inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             <i class="fas fa-chart-line mr-2"></i> Dashboard
                         </a>
@@ -32,22 +33,87 @@
                         </a>
                     </div>
                 </div>
-                <div class="flex items-center">
+                <!-- Desktop User Menu -->
+                <div class="hidden md:flex items-center">
                     <div class="ml-3 relative">
                         <div class="flex items-center space-x-4">
-                            <span class="text-gray-700">{{ auth()->user()->name }}</span>
+                            <span class="text-gray-700 text-sm">{{ auth()->user()->name }}</span>
+                            <a href="{{ route('admin.profile.change-password') }}" class="text-gray-500 hover:text-gray-700 text-sm">
+                                <i class="fas fa-key"></i> <span class="hidden lg:inline">Change Password</span>
+                            </a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="text-gray-500 hover:text-gray-700">
-                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                <button type="submit" class="text-gray-500 hover:text-gray-700 text-sm">
+                                    <i class="fas fa-sign-out-alt"></i> <span class="hidden lg:inline">Logout</span>
                                 </button>
                             </form>
                         </div>
                     </div>
                 </div>
+                <!-- Mobile menu button -->
+                <div class="flex items-center md:hidden">
+                    <button type="button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                        <i class="fas fa-bars text-xl" id="menuOpenIcon"></i>
+                        <i class="fas fa-times text-xl hidden" id="menuCloseIcon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div class="hidden md:hidden" id="mobileMenu">
+            <div class="pt-2 pb-3 space-y-1">
+                <a href="{{ route('admin.dashboard') }}" class="@if(request()->routeIs('admin.dashboard')) bg-indigo-50 border-indigo-500 text-indigo-700 @else border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 @endif block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    <i class="fas fa-chart-line mr-2"></i> Dashboard
+                </a>
+                <a href="{{ route('admin.apps.index') }}" class="@if(request()->routeIs('admin.apps.*')) bg-indigo-50 border-indigo-500 text-indigo-700 @else border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 @endif block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    <i class="fas fa-layer-group mr-2"></i> Apps
+                </a>
+                <a href="{{ route('admin.payments.index') }}" class="@if(request()->routeIs('admin.payments.*')) bg-indigo-50 border-indigo-500 text-indigo-700 @else border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 @endif block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    <i class="fas fa-money-bill-wave mr-2"></i> Payments
+                </a>
+                <a href="{{ route('admin.test-payment') }}" class="@if(request()->routeIs('admin.test-payment')) bg-indigo-50 border-indigo-500 text-indigo-700 @else border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 @endif block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    <i class="fas fa-flask mr-2"></i> Test Payment
+                </a>
+            </div>
+            <div class="pt-4 pb-3 border-t border-gray-200">
+                <div class="flex items-center px-4 mb-3">
+                    <div class="flex-shrink-0">
+                        <div class="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <div class="text-base font-medium text-gray-800">{{ auth()->user()->name }}</div>
+                        <div class="text-sm font-medium text-gray-500">{{ auth()->user()->email }}</div>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <a href="{{ route('admin.profile.change-password') }}" class="block px-4 py-2 text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100">
+                        <i class="fas fa-key mr-2"></i> Change Password
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full text-left block px-4 py-2 text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </nav>
+
+    <script>
+    function toggleMobileMenu() {
+        const menu = document.getElementById('mobileMenu');
+        const openIcon = document.getElementById('menuOpenIcon');
+        const closeIcon = document.getElementById('menuCloseIcon');
+        
+        menu.classList.toggle('hidden');
+        openIcon.classList.toggle('hidden');
+        closeIcon.classList.toggle('hidden');
+    }
+    </script>
     @endauth
 
     <!-- Flash Messages -->

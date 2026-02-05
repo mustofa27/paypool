@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\WebDashboardController;
 use App\Http\Controllers\Admin\WebAppController;
 use App\Http\Controllers\Admin\WebPaymentController;
+use App\Http\Controllers\Admin\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 // Root route - redirect to dashboard if authenticated, login if not
@@ -36,4 +37,8 @@ Route::prefix('admin')->middleware('auth')->name('admin.')->group(function () {
     Route::post('/test-payment', [\App\Http\Controllers\Admin\TestPaymentController::class, 'store'])->name('test-payment.store');
     Route::post('/payments/{payment}/mark-paid', [\App\Http\Controllers\Admin\TestPaymentController::class, 'markAsPaid'])->name('payments.mark-paid');
     Route::post('/payments/{payment}/mark-expired', [\App\Http\Controllers\Admin\TestPaymentController::class, 'markAsExpired'])->name('payments.mark-expired');
+    
+    // Profile
+    Route::get('/profile/change-password', [ProfileController::class, 'showChangePasswordForm'])->name('profile.change-password');
+    Route::put('/profile/change-password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
 });
