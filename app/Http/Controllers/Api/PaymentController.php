@@ -28,10 +28,10 @@ class PaymentController extends Controller
             'external_id' => 'required|string|unique:payments,external_id',
             'amount' => 'required|numeric|min:10000', // Min 10,000 IDR
             'currency' => 'sometimes|string|size:3',
-            'customer_name' => 'required|string|max:255',
+            'customer_name' => 'required|string|min:3|max:255',
             'customer_email' => 'required|email',
             'customer_phone' => 'nullable|string',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:1000',
             'metadata' => 'nullable|array',
             'success_redirect_url' => 'nullable|url',
             'failure_redirect_url' => 'nullable|url',

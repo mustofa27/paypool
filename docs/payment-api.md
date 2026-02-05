@@ -1,39 +1,69 @@
-# Paypool Payment API интеграция (для сторонних приложений)
+# Paypool Payment API Integration (for Third-Party Applications)
 
-Этот документ описывает, как интегрировать ваше приложение с Paypool для создания и управления платежами через Xendit.
+This document describes how to integrate your application with Paypool to create and manage payments through Xendit.
 
-## 1) Базовый URL
-Используйте адрес вашего Paypool сервера, например:
-- http://localhost (локально)
-- https://paypool.yourdomain.com (прод)
+## 1) Base URL
+Use your Paypool server address, for example:
+- http://localhost (local)
+- https://paypool.yourdomain.com (production)
 
-Все API-эндпоинты ниже находятся по префиксу `/api/v1`.
+All API endpoints below are prefixed with `/api/v1`.
 
-## 2) Аутентификация
-Используется Bearer токен приложения.
+## 2) Authentication
+Uses Bearer token authentication.
 
-**Заголовки:**
+**Headers:**
 - `Authorization: Bearer <APP_ACCESS_TOKEN>`
 - `Content-Type: application/json`
 
-Токен выдается в админ-панели Paypool при создании приложения.
+The token is issued in the Paypool admin panel when creating an application.
 
-## 3) Создание платежа
+## 3) Redirect URLs
+Redirect URLs control where users are sent after payment completion. There are two levels of configuration:
+
+**App-Level Defaults (Admin Panel):**
+Each application has default `success_redirect_url` and `failure_redirect_url` configured in the Paypool admin panel. These are used for all payments unless overridden.
+
+**Per-Payment Override (API):**
+When creating a payment, you can pass `success_redirect_url` and `failure_redirect_url` in the request body to override the app defaults for that specific payment.
+
+**Priority (Highest to Lowest):**
+1. URLs passed in the payment creation request
+2. App's default URLs (from admin panel)
+3. No redirect (payment completes on Xendit checkout page)
+
+**Example Scenarios:**
+
+*Scenario A: Using app defaults*
+- App configured with: `success_redirect_url: https://app.example.com/success`
+- Payment request: No redirect URLs provided
+- Result: User redirected to `https://app.example.com/success`
+
+*Scenario B: Override for specific payment*
+- App configured with: `success_redirect_url: https://app.example.com/success`
+- Payment request includes: `success_redirect_url: https://app.example.com/special-flow`
+- Result: User redirected to `https://app.example.com/special-flow`
+
+*Scenario C: Different apps, different URLs*
+- App A configured with: `success_redirect_url: https://appa.com/success`
+- App B configured with: `success_redirect_url: https://appb.com/success`
+- Result: Each app's users redirected to their own URLs
+
 **POST** `/api/v1/payments/create`
 
-**Тело запроса (JSON):**
-- `external_id` (string, обязательный, уникальный для вашего приложения)
-- `amount` (number, обязательный, минимум 10000)
-- `currency` (string, опционально, 3 символа, по умолчанию `IDR`)
-- `customer_name` (string, обязательный)
-- `customer_email` (string, обязательный)
-- `customer_phone` (string, опционально)
-- `description` (string, опционально)
-- `metadata` (object, опционально)
-- `success_redirect_url` (string, опционально)
-- `failure_redirect_url` (string, опционально)
+**Request Body (JSON):**
+- `external_id` (string, required, unique for your application)
+- `amount` (number, required, minimum 10000)
+- `currency` (string, optional, 3 characters, default `IDR`)
+- `customer_name` (string, required)
+- `customer_email` (string, required)
+- `customer_phone` (string, optional)
+- `description` (string, optional)
+- `metadata` (object, optional)
+- `success_redirect_url` (string, optional)
+- `failure_redirect_url` (string, optional)
 
-**Пример запроса:**
+**Example Request:**
 ```json
 {
   "external_id": "ORDER-10001",
@@ -52,7 +82,7 @@
 }
 ```
 
-**Пример ответа (201):**
+**Example Response (201):**
 ```json
 {
   "success": true,
@@ -69,14 +99,14 @@
 }
 ```
 
-**Важно:**
-- Если `success_redirect_url`/`failure_redirect_url` не переданы, Paypool использует URLs, заданные для вашего приложения в админ-панели.
-- `external_id` должен быть уникальным в рамках вашего приложения.
+**Important:**
+- If `success_redirect_url`/`failure_redirect_url` are not provided, Paypool uses the URLs configured for your application in the admin panel.
+- `external_id` must be unique within your application.
 
-## 4) Получить платеж по external_id
+## 5) Get Payment by external_id
 **GET** `/api/v1/payments/{externalId}`
 
-**Пример ответа (200):**
+**Example Response (200):**
 ```json
 {
   "success": true,
@@ -97,24 +127,24 @@
 }
 ```
 
-## 5) Список платежей
+## 6) List Payments
 **GET** `/api/v1/payments`
 
-**Query параметры (опционально):**
+**Query Parameters (optional):**
 - `status` (pending|paid|expired|failed)
 - `start_date` (YYYY-MM-DD)
 - `end_date` (YYYY-MM-DD)
-- `per_page` (число, по умолчанию 15)
+- `per_page` (number, default 15)
 
-## 6) Отмена платежа
+## 7) Cancel Payment
 **POST** `/api/v1/payments/{externalId}/cancel`
 
-Отменить можно только платеж со статусом `pending`.
+Only payments with `pending` status can be cancelled.
 
-## 7) Webhook в ваше приложение
-Paypool будет отправлять вебхуки в `webhook_url`, заданный для вашего приложения в админ-панели.
+## 8) Webhook to Your Application
+Paypool will send webhooks to the `webhook_url` configured for your application in the admin panel.
 
-**Формат payload:**
+**Payload Format:**
 ```json
 {
   "event": "payment.updated",
@@ -133,19 +163,19 @@ Paypool будет отправлять вебхуки в `webhook_url`, зад�
 }
 ```
 
-**Рекомендации:**
-- Верните HTTP 200 как можно быстрее.
-- Валидацию можно делать по `external_id` и статусу.
-- Обрабатывайте повторные вебхуки идемпотентно.
+**Recommendations:**
+- Return HTTP 200 as quickly as possible.
+- Validate using `external_id` and status.
+- Handle duplicate webhooks idempotently.
 
-## 8) Ошибки
-**401** — неверный токен
+## 9) Errors
+**401** — Invalid token
 
-**422** — ошибки валидации
+**422** — Validation errors
 
-**500** — внутренняя ошибка Paypool
+**500** — Internal Paypool error
 
-**Пример ошибки (422):**
+**Example Error (422):**
 ```json
 {
   "success": false,
@@ -155,8 +185,8 @@ Paypool будет отправлять вебхуки в `webhook_url`, зад�
 }
 ```
 
-## 9) Рекомендованный flow
-1. Создайте платеж через `/payments/create`
-2. Перенаправьте пользователя на `invoice_url`
-3. Дождитесь webhook `payment.updated`
-4. Проверьте статус через `/payments/{externalId}` при необходимости
+## 10) Recommended Flow
+1. Create payment via `/payments/create`
+2. Redirect user to `invoice_url`
+3. Wait for webhook `payment.updated`
+4. Check status via `/payments/{externalId}` if needed
