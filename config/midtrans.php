@@ -11,7 +11,7 @@ return [
 
     'server_key' => env('MIDTRANS_SERVER_KEY'),
     'client_key' => env('MIDTRANS_CLIENT_KEY'),
-    'base_url' => env('MIDTRANS_BASE_URL', 'https://api.midtrans.com'),
+    'base_url' => env('MIDTRANS_BASE_URL', 'https://app.sandbox.midtrans.com/snap'),
     'success_redirect_url' => env('MIDTRANS_SUCCESS_REDIRECT_URL'),
     'failure_redirect_url' => env('MIDTRANS_FAILURE_REDIRECT_URL'),
 

@@ -55,7 +55,7 @@ class MidtransService
 			Log::info('Midtrans Snap transaction request', ['payload' => $payload]);
 
 			$response = Http::withBasicAuth($this->serverKey, '')
-				->post("{$this->baseUrl}/v2/transactions", $payload);
+				->post("{$this->baseUrl}/v1/transactions", $payload);
 
 			if ($response->failed()) {
 				Log::error('Midtrans transaction creation failed', [
