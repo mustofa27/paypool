@@ -82,10 +82,16 @@ class TestPaymentController extends Controller
                 'payment_url' => $transactionData['redirect_url'] ?? $transactionData['payment_url'] ?? null,
             ]);
 
+            // Redirect directly to Snap payment page if available
+            $snapUrl = $transactionData['redirect_url'] ?? $transactionData['payment_url'] ?? null;
+            if ($snapUrl) {
+                return redirect()->away($snapUrl);
+            }
+
             return redirect()
                 ->route('admin.payments.show', $payment)
                 ->with('success', 'Test payment created successfully with real Midtrans transaction!')
-                ->with('payment_url', $transactionData['redirect_url'] ?? $transactionData['payment_url'] ?? null);
+                ->with('payment_url', $snapUrl);
 
         } catch (Exception $e) {
             return redirect()
