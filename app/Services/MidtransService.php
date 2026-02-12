@@ -46,6 +46,20 @@ class MidtransService
 			if (!empty($data['metadata']) && is_array($data['metadata']) && array_keys($data['metadata']) !== range(0, count($data['metadata']) - 1)) {
 				$payload['metadata'] = $data['metadata'];
 			}
+			// Add Snap callbacks for finish, error, unfinish if provided
+			$callbacks = [];
+			if (!empty($data['success_redirect_url'])) {
+				$callbacks['finish'] = $data['success_redirect_url'];
+			}
+			if (!empty($data['failure_redirect_url'])) {
+				$callbacks['error'] = $data['failure_redirect_url'];
+			}
+			if (!empty($data['unfinish_redirect_url'])) {
+				$callbacks['unfinish'] = $data['unfinish_redirect_url'];
+			}
+			if (!empty($callbacks)) {
+				$payload['callbacks'] = $callbacks;
+			}
 
 			// Add redirect URLs if provided (Snap supports finish/cancel callbacks)
 			if (!empty($data['success_redirect_url'])) {

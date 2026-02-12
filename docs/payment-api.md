@@ -104,6 +104,27 @@ When creating a payment, you can pass `success_redirect_url` and `failure_redire
 - `external_id` must be unique within your application.
 
 ## 5) Get Payment by external_id
+
+## 5a) Continue Payment (Snap Redirect URL)
+**GET** `/api/v1/payments/{externalId}/continue`
+
+Returns the Snap payment page URL for a pending payment, so users can continue an unfinished payment.
+
+**Example Response (200):**
+```json
+{
+  "success": true,
+  "redirect_url": "https://app.sandbox.midtrans.com/snap/v2/vtweb/xxxxxx"
+}
+```
+
+**If the payment is not pending or no Snap URL is available:**
+```json
+{
+  "success": false,
+  "message": "Payment is not pending or cannot be continued"
+}
+```
 **GET** `/api/v1/payments/{externalId}`
 
 **Example Response (200):**

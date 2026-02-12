@@ -54,6 +54,10 @@ class TestPaymentController extends Controller
                 'customer_email' => $validated['customer_email'],
                 'customer_phone' => $validated['customer_phone'] ?? null,
                 'description' => $validated['description'] ?? 'Test Payment',
+                // Set default test redirect URLs
+                'success_redirect_url' => url('/test-payment/success'),
+                'failure_redirect_url' => url('/test-payment/failure'),
+                'unfinish_redirect_url' => url('/test-payment/unfinish'),
             ]);
 
             // Create payment record

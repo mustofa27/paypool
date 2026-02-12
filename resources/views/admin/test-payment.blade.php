@@ -117,6 +117,7 @@
                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-indigo-500">{{ old('description', 'Test payment for development') }}</textarea>
                 </div>
 
+
                 <button type="submit" 
                         class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded focus:outline-none focus:shadow-outline">
                     <i class="fas fa-plus mr-2"></i>Create Test Payment

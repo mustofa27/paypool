@@ -1,3 +1,43 @@
+    /**
+     * Get Snap redirect_url to continue a pending payment
+     */
+    public function continue(Request $request, string $externalId)
+    {
+        /** @var App $app */
+        $app = $request->input('authenticated_app');
+
+        $payment = Payment::where('external_id', $externalId)
+            ->where('app_id', $app->id)
+            ->first();
+
+        if (!$payment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment not found',
+            ], 404);
+        }
+
+        if ($payment->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment is not pending or cannot be continued',
+            ], 400);
+        }
+
+        $redirectUrl = $payment->midtrans_response['redirect_url'] ?? $payment->midtrans_response['payment_url'] ?? null;
+
+        if (!$redirectUrl) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No Snap payment URL available for this payment',
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'redirect_url' => $redirectUrl,
+        ]);
+    }
 <?php
 
 namespace App\Http\Controllers\Api;

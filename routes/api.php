@@ -34,6 +34,7 @@ Route::prefix('v1')->middleware(['auth.app'])->group(function () {
         Route::get('/{externalId}', [\App\Http\Controllers\Api\PaymentController::class, 'show']);
         Route::get('/', [\App\Http\Controllers\Api\PaymentController::class, 'index']);
         Route::post('/{externalId}/cancel', [\App\Http\Controllers\Api\PaymentController::class, 'cancel']);
+        Route::get('/{externalId}/continue', [\App\Http\Controllers\Api\PaymentController::class, 'continue']);
     });
 });
 
