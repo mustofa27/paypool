@@ -41,10 +41,11 @@ class WebhookController extends Controller
             }
 
             $data = $request->all();
-            $externalId = $data['external_id'] ?? null;
+            // Support both 'external_id' and 'order_id' for compatibility
+            $externalId = $data['external_id'] ?? $data['order_id'] ?? null;
 
             if (!$externalId) {
-                Log::warning('Midtrans webhook missing external_id', $data);
+                Log::warning('Midtrans webhook missing external_id/order_id', $data);
                 return response()->json(['success' => false], 400);
             }
 

@@ -20,21 +20,21 @@ class TestPaymentController extends Controller
         $statusCode = $request->query('status_code');
         $transactionStatus = $request->query('transaction_status');
 
-        // Mark payment as paid if transaction_status is settlement or capture
-        if ($orderId && in_array($transactionStatus, ['settlement', 'capture'])) {
-            $payment = Payment::where('external_id', $orderId)->first();
-            if ($payment && $payment->isPending()) {
-                $payment->markAsPaid([
-                    'payment_method' => 'SNAP',
-                    'payment_id' => $orderId,
-                ]);
-                $payment->logEvent('snap_paid', [
-                    'message' => 'Marked as paid via Snap redirect',
-                    'status_code' => $statusCode,
-                    'transaction_status' => $transactionStatus,
-                ]);
-            }
-        }
+        // // Mark payment as paid if transaction_status is settlement or capture
+        // if ($orderId && in_array($transactionStatus, ['settlement', 'capture'])) {
+        //     $payment = Payment::where('external_id', $orderId)->first();
+        //     if ($payment && $payment->isPending()) {
+        //         $payment->markAsPaid([
+        //             'payment_method' => 'SNAP',
+        //             'payment_id' => $orderId,
+        //         ]);
+        //         $payment->logEvent('snap_paid', [
+        //             'message' => 'Marked as paid via Snap redirect',
+        //             'status_code' => $statusCode,
+        //             'transaction_status' => $transactionStatus,
+        //         ]);
+        //     }
+        // }
 
         return view('admin.test-payment-snap-redirect', [
             'type' => 'success',
