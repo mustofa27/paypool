@@ -35,6 +35,10 @@ Route::prefix('admin')->middleware('auth')->name('admin.')->group(function () {
     // Test payments
     Route::get('/test-payment', [\App\Http\Controllers\Admin\TestPaymentController::class, 'create'])->name('test-payment');
     Route::post('/test-payment', [\App\Http\Controllers\Admin\TestPaymentController::class, 'store'])->name('test-payment.store');
+    // Snap redirect handlers for test payments
+    Route::get('/test-payment/success', [\App\Http\Controllers\Admin\TestPaymentController::class, 'snapSuccess'])->name('test-payment.snap-success');
+    Route::get('/test-payment/failure', [\App\Http\Controllers\Admin\TestPaymentController::class, 'snapFailure'])->name('test-payment.snap-failure');
+    Route::get('/test-payment/unfinish', [\App\Http\Controllers\Admin\TestPaymentController::class, 'snapUnfinish'])->name('test-payment.snap-unfinish');
     Route::post('/payments/{payment}/mark-paid', [\App\Http\Controllers\Admin\TestPaymentController::class, 'markAsPaid'])->name('payments.mark-paid');
     Route::post('/payments/{payment}/mark-expired', [\App\Http\Controllers\Admin\TestPaymentController::class, 'markAsExpired'])->name('payments.mark-expired');
     

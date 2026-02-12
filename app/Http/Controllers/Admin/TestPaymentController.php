@@ -1,3 +1,50 @@
+    /**
+     * Handle Snap success redirect for test payments
+     */
+    public function snapSuccess(Request $request)
+    {
+        $orderId = $request->query('order_id');
+        $statusCode = $request->query('status_code');
+        $transactionStatus = $request->query('transaction_status');
+        return view('admin.test-payment-snap-redirect', [
+            'type' => 'success',
+            'orderId' => $orderId,
+            'statusCode' => $statusCode,
+            'transactionStatus' => $transactionStatus,
+        ]);
+    }
+
+    /**
+     * Handle Snap failure/error redirect for test payments
+     */
+    public function snapFailure(Request $request)
+    {
+        $orderId = $request->query('order_id');
+        $statusCode = $request->query('status_code');
+        $transactionStatus = $request->query('transaction_status');
+        return view('admin.test-payment-snap-redirect', [
+            'type' => 'failure',
+            'orderId' => $orderId,
+            'statusCode' => $statusCode,
+            'transactionStatus' => $transactionStatus,
+        ]);
+    }
+
+    /**
+     * Handle Snap unfinish redirect for test payments
+     */
+    public function snapUnfinish(Request $request)
+    {
+        $orderId = $request->query('order_id');
+        $statusCode = $request->query('status_code');
+        $transactionStatus = $request->query('transaction_status');
+        return view('admin.test-payment-snap-redirect', [
+            'type' => 'unfinish',
+            'orderId' => $orderId,
+            'statusCode' => $statusCode,
+            'transactionStatus' => $transactionStatus,
+        ]);
+    }
 <?php
 
 namespace App\Http\Controllers\Admin;
