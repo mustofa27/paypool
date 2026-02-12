@@ -37,12 +37,15 @@ class MidtransService
 				'item_details' => $data['items'] ?? [],
 				'currency' => $data['currency'] ?? 'IDR',
 				'expiry' => [
-					'start_time' => now()->toIso8601String(),
+					'start_time' => now()->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s O'),
 					'duration' => config('midtrans.transaction.expiry_duration', 86400),
 					'unit' => 'second',
 				],
-				'metadata' => $data['metadata'] ?? [],
 			];
+			// Only include metadata if it's a non-empty associative array
+			if (!empty($data['metadata']) && is_array($data['metadata']) && array_keys($data['metadata']) !== range(0, count($data['metadata']) - 1)) {
+				$payload['metadata'] = $data['metadata'];
+			}
 
 			// Add redirect URLs if provided (Snap supports finish/cancel callbacks)
 			if (!empty($data['success_redirect_url'])) {
