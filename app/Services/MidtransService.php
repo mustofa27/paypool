@@ -25,6 +25,7 @@ class MidtransService
 	{
 		try {
 			$payload = [
+				'payment_type' => 'snap',
 				'transaction_details' => [
 					'order_id' => $data['external_id'],
 					'gross_amount' => (int)$data['amount'],
@@ -46,13 +47,13 @@ class MidtransService
 
 			// Add redirect URLs if provided
 			if (!empty($data['success_redirect_url'])) {
-				$payload['success_redirect_url'] = $data['success_redirect_url'];
+				$payload['callbacks']['finish'] = $data['success_redirect_url'];
 			}
 			if (!empty($data['failure_redirect_url'])) {
-				$payload['failure_redirect_url'] = $data['failure_redirect_url'];
+				$payload['callbacks']['error'] = $data['failure_redirect_url'];
 			}
 
-			Log::info('Midtrans transaction request', ['payload' => $payload]);
+			Log::info('Midtrans Snap transaction request', ['payload' => $payload]);
 
 			$response = Http::withBasicAuth($this->serverKey, '')
 				->post("{$this->baseUrl}/v2/charge", $payload);
