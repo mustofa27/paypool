@@ -22,7 +22,9 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Admin routes (web interface)
 
+
 // Snap redirect handlers for test payments (public, no auth, no /admin prefix)
+Route::get('/test-payment', [\App\Http\Controllers\Admin\TestPaymentController::class, 'create'])->name('test-payment');
 Route::get('/test-payment/success', [\App\Http\Controllers\Admin\TestPaymentController::class, 'snapSuccess'])->name('test-payment.snap-success');
 Route::get('/test-payment/failure', [\App\Http\Controllers\Admin\TestPaymentController::class, 'snapFailure'])->name('test-payment.snap-failure');
 Route::get('/test-payment/unfinish', [\App\Http\Controllers\Admin\TestPaymentController::class, 'snapUnfinish'])->name('test-payment.snap-unfinish');
