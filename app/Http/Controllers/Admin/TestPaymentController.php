@@ -5,17 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\App;
 use App\Models\Payment;
-use App\Services\XenditService;
+use App\Services\MidtransService;
 use Illuminate\Http\Request;
 use Exception;
 
 class TestPaymentController extends Controller
 {
-    protected XenditService $xenditService;
+    protected MidtransService $midtransService;
 
-    public function __construct(XenditService $xenditService)
+    public function __construct(MidtransService $midtransService)
     {
-        $this->xenditService = $xenditService;
+        $this->midtransService = $midtransService;
     }
 
     /**
@@ -45,8 +45,8 @@ class TestPaymentController extends Controller
             $app = App::findOrFail($validated['app_id']);
             $externalId = 'TEST-' . time() . '-' . rand(1000, 9999);
 
-            // Create real Xendit invoice
-            $invoiceData = $this->xenditService->createInvoice([
+            // Create real Midtrans transaction
+            $transactionData = $this->midtransService->createTransaction([
                 'external_id' => $externalId,
                 'amount' => $validated['amount'],
                 'currency' => 'IDR',
@@ -67,25 +67,25 @@ class TestPaymentController extends Controller
                 'customer_phone' => $validated['customer_phone'] ?? null,
                 'description' => $validated['description'] ?? 'Test Payment',
                 'status' => 'pending',
-                'xendit_invoice_id' => $invoiceData['id'],
-                'expired_at' => $invoiceData['expiry_date'],
+                'midtrans_transaction_id' => $transactionData['transaction_id'] ?? $transactionData['order_id'] ?? null,
+                'expired_at' => $transactionData['expiry_time'] ?? null,
                 'metadata' => [
                     'is_test' => true,
                     'created_by_admin' => auth()->user()->name,
                 ],
-                'xendit_response' => $invoiceData,
+                'midtrans_response' => $transactionData,
             ]);
 
             $payment->logEvent('test_created', [
-                'message' => 'Test payment created by admin with real Xendit invoice',
+                'message' => 'Test payment created by admin with real Midtrans transaction',
                 'admin' => auth()->user()->name,
-                'invoice_url' => $invoiceData['invoice_url'],
+                'payment_url' => $transactionData['redirect_url'] ?? $transactionData['payment_url'] ?? null,
             ]);
 
             return redirect()
                 ->route('admin.payments.show', $payment)
-                ->with('success', 'Test payment created successfully with real Xendit invoice!')
-                ->with('payment_url', $invoiceData['invoice_url']);
+                ->with('success', 'Test payment created successfully with real Midtrans transaction!')
+                ->with('payment_url', $transactionData['redirect_url'] ?? $transactionData['payment_url'] ?? null);
 
         } catch (Exception $e) {
             return redirect()

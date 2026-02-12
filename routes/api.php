@@ -37,5 +37,5 @@ Route::prefix('v1')->middleware(['auth.app'])->group(function () {
     });
 });
 
-// Webhooks (no auth, validated by Xendit signature)
-Route::post('/webhooks/xendit', [\App\Http\Controllers\WebhookController::class, 'xendit']);
+// Webhooks (no auth, validated by Midtrans signature)
+Route::post('/webhooks/midtrans', [\App\Http\Controllers\WebhookController::class, 'midtrans']);

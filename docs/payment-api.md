@@ -1,6 +1,6 @@
 # Paypool Payment API Integration (for Third-Party Applications)
 
-This document describes how to integrate your application with Paypool to create and manage payments through Xendit.
+This document describes how to integrate your application with Paypool to create and manage payments through Midtrans.
 
 ## 1) Base URL
 Use your Paypool server address, for example:
@@ -30,7 +30,7 @@ When creating a payment, you can pass `success_redirect_url` and `failure_redire
 **Priority (Highest to Lowest):**
 1. URLs passed in the payment creation request
 2. App's default URLs (from admin panel)
-3. No redirect (payment completes on Xendit checkout page)
+3. No redirect (payment completes on Midtrans payment page)
 
 **Example Scenarios:**
 
@@ -93,7 +93,7 @@ When creating a payment, you can pass `success_redirect_url` and `failure_redire
     "amount": 250000,
     "currency": "IDR",
     "status": "pending",
-    "invoice_url": "https://checkout.xendit.co/...",
+    "invoice_url": "https://app.midtrans.com/payment-link/...",
     "expired_at": "2026-02-05T10:00:00Z"
   }
 }
@@ -118,7 +118,7 @@ When creating a payment, you can pass `success_redirect_url` and `failure_redire
     "status": "paid",
     "customer_name": "Budi",
     "customer_email": "budi@example.com",
-    "payment_method": "EWALLET",
+    "payment_method": "credit_card",
     "paid_at": "2026-02-05T10:05:00Z",
     "expired_at": "2026-02-05T10:00:00Z",
     "metadata": {"order_id": 10001},
@@ -155,11 +155,11 @@ Paypool will send webhooks to the `webhook_url` configured for your application 
     "status": "paid",
     "customer_name": "Budi",
     "customer_email": "budi@example.com",
-    "payment_method": "EWALLET",
+    "payment_method": "credit_card",
     "paid_at": "2026-02-05T10:05:00Z",
     "metadata": {"order_id": 10001}
   },
-  "xendit_data": {"...": "raw xendit payload"}
+  "midtrans_data": {"...": "raw midtrans payload"}
 }
 ```
 
@@ -187,6 +187,6 @@ Paypool will send webhooks to the `webhook_url` configured for your application 
 
 ## 10) Recommended Flow
 1. Create payment via `/payments/create`
-2. Redirect user to `invoice_url`
+2. Redirect user to `invoice_url` (Midtrans payment page)
 3. Wait for webhook `payment.updated`
 4. Check status via `/payments/{externalId}` if needed

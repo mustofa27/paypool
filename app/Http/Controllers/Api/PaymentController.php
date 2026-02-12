@@ -5,18 +5,18 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\App;
 use App\Models\Payment;
-use App\Services\XenditService;
+use App\Services\MidtransService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Exception;
 
 class PaymentController extends Controller
 {
-    protected XenditService $xenditService;
+    protected MidtransService $midtransService;
 
-    public function __construct(XenditService $xenditService)
+    public function __construct(MidtransService $midtransService)
     {
-        $this->xenditService = $xenditService;
+        $this->midtransService = $midtransService;
     }
 
     /**
@@ -62,8 +62,8 @@ class PaymentController extends Controller
                 'metadata' => $request->metadata,
             ]);
 
-            // Create invoice in Xendit
-            $invoiceData = $this->xenditService->createInvoice([
+            // Create transaction in Midtrans
+            $transactionData = $this->midtransService->createTransaction([
                 'external_id' => $request->external_id,
                 'amount' => $request->amount,
                 'currency' => $request->currency ?? 'IDR',
@@ -75,17 +75,17 @@ class PaymentController extends Controller
                 'failure_redirect_url' => $request->failure_redirect_url ?? $app->failure_redirect_url,
             ]);
 
-            // Update payment with Xendit data
+            // Update payment with Midtrans data
             $payment->update([
-                'xendit_invoice_id' => $invoiceData['id'],
-                'expired_at' => $invoiceData['expiry_date'],
-                'xendit_response' => $invoiceData,
+                'midtrans_transaction_id' => $transactionData['transaction_id'] ?? $transactionData['order_id'] ?? null,
+                'expired_at' => $transactionData['expiry_time'] ?? null,
+                'midtrans_response' => $transactionData,
             ]);
 
             // Log the creation
             $payment->logEvent('created', [
-                'invoice_id' => $invoiceData['id'],
-                'invoice_url' => $invoiceData['invoice_url'],
+                'transaction_id' => $transactionData['transaction_id'] ?? $transactionData['order_id'] ?? null,
+                'payment_url' => $transactionData['redirect_url'] ?? $transactionData['payment_url'] ?? null,
             ]);
 
             return response()->json([
@@ -97,7 +97,7 @@ class PaymentController extends Controller
                     'amount' => $payment->amount,
                     'currency' => $payment->currency,
                     'status' => $payment->status,
-                    'invoice_url' => $invoiceData['invoice_url'],
+                    'payment_url' => $transactionData['redirect_url'] ?? $transactionData['payment_url'] ?? null,
                     'expired_at' => $payment->expired_at,
                 ],
             ], 201);
@@ -213,9 +213,9 @@ class PaymentController extends Controller
         }
 
         try {
-            // Expire invoice in Xendit
-            if ($payment->xendit_invoice_id) {
-                $this->xenditService->expireInvoice($payment->xendit_invoice_id);
+            // Cancel transaction in Midtrans
+            if ($payment->midtrans_transaction_id) {
+                $this->midtransService->cancelTransaction($payment->midtrans_transaction_id);
             }
 
             $payment->markAsExpired();

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\WebhookLog;
-use App\Services\XenditService;
+use App\Services\MidtransService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -12,25 +12,25 @@ use Exception;
 
 class WebhookController extends Controller
 {
-    protected XenditService $xenditService;
+    protected MidtransService $midtransService;
 
-    public function __construct(XenditService $xenditService)
+    public function __construct(MidtransService $midtransService)
     {
-        $this->xenditService = $xenditService;
+        $this->midtransService = $midtransService;
     }
 
     /**
-     * Handle Xendit webhook
+     * Handle Midtrans webhook
      */
-    public function xendit(Request $request)
+    public function midtrans(Request $request)
     {
         try {
             // Verify webhook signature
-            $signature = $request->header('x-callback-token');
+            $signature = $request->header('signature-key');
             $payload = $request->getContent();
 
-            if (!$this->xenditService->verifyWebhookSignature($payload, $signature ?? '')) {
-                Log::warning('Invalid Xendit webhook signature', [
+            if (!$this->midtransService->verifyWebhookSignature($payload, $signature ?? '')) {
+                Log::warning('Invalid Midtrans webhook signature', [
                     'ip' => $request->ip(),
                 ]);
 
@@ -44,7 +44,7 @@ class WebhookController extends Controller
             $externalId = $data['external_id'] ?? null;
 
             if (!$externalId) {
-                Log::warning('Xendit webhook missing external_id', $data);
+                Log::warning('Midtrans webhook missing external_id', $data);
                 return response()->json(['success' => false], 400);
             }
 
@@ -77,7 +77,7 @@ class WebhookController extends Controller
 
             return response()->json(['success' => true]);
         } catch (Exception $e) {
-            Log::error('Xendit webhook processing error', [
+            Log::error('Midtrans webhook processing error', [
                 'error' => $e->getMessage(),
                 'data' => $request->all(),
             ]);
@@ -94,7 +94,7 @@ class WebhookController extends Controller
      */
     protected function processWebhook(Payment $payment, array $data): void
     {
-        $status = strtolower($data['status'] ?? '');
+        $status = strtolower($data['transaction_status'] ?? $data['status'] ?? '');
 
         switch ($status) {
             case 'paid':
@@ -145,9 +145,9 @@ class WebhookController extends Controller
                 break;
         }
 
-        // Update xendit_response with latest data
+        // Update midtrans_response with latest data
         $payment->update([
-            'xendit_response' => array_merge($payment->xendit_response ?? [], $data),
+            'midtrans_response' => array_merge($payment->midtrans_response ?? [], $data),
         ]);
     }
 
@@ -171,7 +171,7 @@ class WebhookController extends Controller
                         'paid_at' => $payment->paid_at,
                         'metadata' => $payment->metadata,
                     ],
-                    'xendit_data' => $data,
+                    'midtrans_data' => $data,
                 ]);
 
             $webhookLog->update([

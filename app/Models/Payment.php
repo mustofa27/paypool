@@ -11,8 +11,7 @@ class Payment extends Model
     protected $fillable = [
         'app_id',
         'external_id',
-        'xendit_invoice_id',
-        'xendit_payment_id',
+        'midtrans_transaction_id',
         'amount',
         'currency',
         'customer_name',
@@ -24,7 +23,7 @@ class Payment extends Model
         'paid_at',
         'expired_at',
         'metadata',
-        'xendit_response',
+        'midtrans_response',
     ];
 
     protected $casts = [
@@ -32,7 +31,7 @@ class Payment extends Model
         'paid_at' => 'datetime',
         'expired_at' => 'datetime',
         'metadata' => 'array',
-        'xendit_response' => 'array',
+        'midtrans_response' => 'array',
     ];
 
     /**
@@ -84,7 +83,7 @@ class Payment extends Model
             'status' => 'paid',
             'paid_at' => now(),
             'payment_method' => $data['payment_method'] ?? null,
-            'xendit_payment_id' => $data['payment_id'] ?? null,
+            'midtrans_transaction_id' => $data['payment_id'] ?? null,
         ]);
     }
 
