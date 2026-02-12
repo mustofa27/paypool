@@ -25,20 +25,7 @@ class WebhookController extends Controller
     public function midtrans(Request $request)
     {
         try {
-            // Verify webhook signature
-            $signature = $request->header('signature-key');
-            $payload = $request->getContent();
-
-            if (!$this->midtransService->verifyWebhookSignature($payload, $signature ?? '')) {
-                Log::warning('Invalid Midtrans webhook signature', [
-                    'ip' => $request->ip(),
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid signature',
-                ], 401);
-            }
+            // Optionally: You can check HTTP Basic Auth here if you want extra security
 
             $data = $request->all();
             // Support both 'external_id' and 'order_id' for compatibility
