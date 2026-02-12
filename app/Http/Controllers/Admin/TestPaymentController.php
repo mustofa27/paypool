@@ -1,3 +1,16 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\App;
+use App\Models\Payment;
+use App\Services\MidtransService;
+use Illuminate\Http\Request;
+use Exception;
+
+class TestPaymentController extends Controller
+{
     /**
      * Handle Snap success redirect for test payments
      */
@@ -45,19 +58,6 @@
             'transactionStatus' => $transactionStatus,
         ]);
     }
-<?php
-
-namespace App\Http\Controllers\Admin;
-
-use App\Http\Controllers\Controller;
-use App\Models\App;
-use App\Models\Payment;
-use App\Services\MidtransService;
-use Illuminate\Http\Request;
-use Exception;
-
-class TestPaymentController extends Controller
-{
     protected MidtransService $midtransService;
 
     public function __construct(MidtransService $midtransService)
