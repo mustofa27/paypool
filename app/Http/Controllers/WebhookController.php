@@ -87,6 +87,8 @@ class WebhookController extends Controller
         switch ($status) {
             case 'paid':
             case 'settled':
+            case 'settlement':
+            case 'capture':
                 if (!$payment->isPaid()) {
                     $payment->markAsPaid([
                         'payment_method' => $data['payment_method'] ?? null,
