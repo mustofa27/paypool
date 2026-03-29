@@ -16,17 +16,17 @@ class PaymentController extends Controller
         $query = Payment::with(['app:id,name']);
 
         // Filter by app
-        if ($request->has('app_id')) {
+        if ($request->filled('app_id')) {
             $query->where('app_id', $request->app_id);
         }
 
         // Filter by status
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
         // Search by external_id or customer info
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('external_id', 'like', '%' . $request->search . '%')
                   ->orWhere('customer_name', 'like', '%' . $request->search . '%')
@@ -35,10 +35,10 @@ class PaymentController extends Controller
         }
 
         // Date range filter
-        if ($request->has('start_date')) {
+        if ($request->filled('start_date')) {
             $query->whereDate('created_at', '>=', $request->start_date);
         }
-        if ($request->has('end_date')) {
+        if ($request->filled('end_date')) {
             $query->whereDate('created_at', '<=', $request->end_date);
         }
 

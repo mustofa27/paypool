@@ -204,15 +204,15 @@ class PaymentController extends Controller
         $query = Payment::where('app_id', $app->id);
 
         // Filter by status
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
         // Date range
-        if ($request->has('start_date')) {
+        if ($request->filled('start_date')) {
             $query->whereDate('created_at', '>=', $request->start_date);
         }
-        if ($request->has('end_date')) {
+        if ($request->filled('end_date')) {
             $query->whereDate('created_at', '<=', $request->end_date);
         }
 
