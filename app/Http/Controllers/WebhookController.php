@@ -5,18 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use App\Models\WebhookLog;
 use App\Services\MidtransService;
+use App\Services\PaymentCallbackService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
 class WebhookController extends Controller
 {
     protected MidtransService $midtransService;
+    protected PaymentCallbackService $paymentCallbackService;
 
-    public function __construct(MidtransService $midtransService)
+    public function __construct(MidtransService $midtransService, PaymentCallbackService $paymentCallbackService)
     {
         $this->midtransService = $midtransService;
+        $this->paymentCallbackService = $paymentCallbackService;
     }
 
     /**
@@ -47,21 +49,20 @@ class WebhookController extends Controller
             }
 
             // Log webhook
-            $webhookLog = WebhookLog::create([
+            WebhookLog::create([
                 'app_id' => $payment->app_id,
                 'payment_id' => $payment->id,
-                'event_type' => $data['status'] ?? 'unknown',
+                'event_type' => 'midtrans_incoming',
                 'payload' => $data,
                 'status' => 'success',
             ]);
 
             // Process webhook based on status
-            $this->processWebhook($payment, $data);
+            $status = $this->processWebhook($payment, $data);
 
             // Forward webhook to app
-            if ($payment->app->webhook_url) {
-                $this->forwardWebhook($payment, $data, $webhookLog);
-            }
+            $eventType = 'midtrans_' . preg_replace('/[^a-z0-9_]+/', '_', $status ?: 'unknown');
+            $this->paymentCallbackService->dispatchPaymentUpdated($payment, $data, $eventType);
 
             return response()->json(['success' => true]);
         } catch (Exception $e) {
@@ -80,7 +81,7 @@ class WebhookController extends Controller
     /**
      * Process webhook data
      */
-    protected function processWebhook(Payment $payment, array $data): void
+    protected function processWebhook(Payment $payment, array $data): string
     {
         $status = strtolower($data['transaction_status'] ?? $data['status'] ?? '');
 
@@ -139,55 +140,11 @@ class WebhookController extends Controller
         $payment->update([
             'midtrans_response' => array_merge($payment->midtrans_response ?? [], $data),
         ]);
+
+        return $status;
     }
 
     /**
      * Forward webhook to app's callback URL
      */
-    protected function forwardWebhook(Payment $payment, array $data, WebhookLog $webhookLog): void
-    {
-        try {
-            $response = Http::timeout(10)
-                ->post($payment->app->webhook_url, [
-                    'event' => 'payment.updated',
-                    'payment' => [
-                        'external_id' => $payment->external_id,
-                        'amount' => $payment->amount,
-                        'currency' => $payment->currency,
-                        'status' => $payment->status,
-                        'customer_name' => $payment->customer_name,
-                        'customer_email' => $payment->customer_email,
-                        'payment_method' => $payment->payment_method,
-                        'paid_at' => $payment->paid_at,
-                        'metadata' => $payment->metadata,
-                    ],
-                    'midtrans_data' => $data,
-                ]);
-
-            $webhookLog->update([
-                'response' => [
-                    'status' => $response->status(),
-                    'body' => $response->json(),
-                ],
-                'status' => $response->successful() ? 'success' : 'failed',
-            ]);
-
-            Log::info('Webhook forwarded to app', [
-                'app_id' => $payment->app_id,
-                'webhook_url' => $payment->app->webhook_url,
-                'status' => $response->status(),
-            ]);
-        } catch (Exception $e) {
-            $webhookLog->update([
-                'response' => ['error' => $e->getMessage()],
-                'status' => 'failed',
-            ]);
-
-            Log::error('Failed to forward webhook to app', [
-                'app_id' => $payment->app_id,
-                'webhook_url' => $payment->app->webhook_url,
-                'error' => $e->getMessage(),
-            ]);
-        }
-    }
 }
