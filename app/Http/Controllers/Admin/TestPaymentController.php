@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\App;
 use App\Models\Payment;
 use App\Services\MidtransService;
+use App\Services\PaymentCallbackService;
 use Illuminate\Http\Request;
 use Exception;
 
@@ -76,10 +77,12 @@ class TestPaymentController extends Controller
         ]);
     }
     protected MidtransService $midtransService;
+    protected PaymentCallbackService $paymentCallbackService;
 
-    public function __construct(MidtransService $midtransService)
+    public function __construct(MidtransService $midtransService, PaymentCallbackService $paymentCallbackService)
     {
         $this->midtransService = $midtransService;
+        $this->paymentCallbackService = $paymentCallbackService;
     }
 
     /**
@@ -190,6 +193,13 @@ class TestPaymentController extends Controller
             'admin' => auth()->user()->name,
         ]);
 
+        $this->paymentCallbackService->dispatchPaymentUpdated($payment, [
+            'source' => 'admin_manual',
+            'action' => 'mark_paid',
+            'status' => $payment->status,
+            'admin' => auth()->user()->name,
+        ], 'manual_paid');
+
         return redirect()
             ->back()
             ->with('success', 'Payment marked as paid! Check if your webhook handler received the update.');
@@ -212,6 +222,13 @@ class TestPaymentController extends Controller
             'message' => 'Test payment marked as expired by admin (manual)',
             'admin' => auth()->user()->name,
         ]);
+
+        $this->paymentCallbackService->dispatchPaymentUpdated($payment, [
+            'source' => 'admin_manual',
+            'action' => 'mark_expired',
+            'status' => $payment->status,
+            'admin' => auth()->user()->name,
+        ], 'manual_expired');
 
         return redirect()
             ->back()

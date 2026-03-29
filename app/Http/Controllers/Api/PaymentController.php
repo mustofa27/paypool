@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\App;
 use App\Models\Payment;
 use App\Services\MidtransService;
+use App\Services\PaymentCallbackService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Exception;
@@ -13,10 +14,12 @@ use Exception;
 class PaymentController extends Controller
 {
     protected MidtransService $midtransService;
+    protected PaymentCallbackService $paymentCallbackService;
 
-    public function __construct(MidtransService $midtransService)
+    public function __construct(MidtransService $midtransService, PaymentCallbackService $paymentCallbackService)
     {
         $this->midtransService = $midtransService;
+        $this->paymentCallbackService = $paymentCallbackService;
     }
 
     /**
@@ -261,6 +264,13 @@ class PaymentController extends Controller
             $payment->logEvent('cancelled', [
                 'cancelled_by' => 'app',
             ]);
+
+            $this->paymentCallbackService->dispatchPaymentUpdated($payment, [
+                'source' => 'api',
+                'action' => 'cancel',
+                'cancelled_by' => 'app',
+                'external_id' => $payment->external_id,
+            ], 'cancelled');
 
             return response()->json([
                 'success' => true,
