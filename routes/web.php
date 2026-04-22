@@ -37,6 +37,7 @@ Route::prefix('admin')->middleware('auth')->name('admin.')->group(function () {
     Route::post('/apps/{app}/regenerate-token', [WebAppController::class, 'regenerateToken'])->name('apps.regenerate-token');
     // Payments management
     Route::resource('payments', WebPaymentController::class)->only(['index', 'show']);
+    Route::post('/payments/{payment}/environment', [WebPaymentController::class, 'updateEnvironment'])->name('payments.update-environment');
     // Test payments
     Route::get('/test-payment', [\App\Http\Controllers\Admin\TestPaymentController::class, 'create'])->name('test-payment');
     Route::post('/test-payment', [\App\Http\Controllers\Admin\TestPaymentController::class, 'store'])->name('test-payment.store');

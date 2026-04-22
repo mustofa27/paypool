@@ -54,6 +54,26 @@
             </div>
         </div>
 
+        <div class="mb-6 flex flex-wrap items-center gap-2 border-t pt-4">
+            <span class="text-sm font-semibold text-gray-700">Set Environment:</span>
+            <form method="POST" action="{{ route('admin.payments.update-environment', $payment) }}" class="inline">
+                @csrf
+                <input type="hidden" name="midtrans_environment" value="sandbox">
+                <button type="submit"
+                        class="{{ ($payment->midtrans_environment ?? 'sandbox') === 'sandbox' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100' }} text-sm font-semibold py-2 px-3 rounded">
+                    Sandbox
+                </button>
+            </form>
+            <form method="POST" action="{{ route('admin.payments.update-environment', $payment) }}" class="inline">
+                @csrf
+                <input type="hidden" name="midtrans_environment" value="production">
+                <button type="submit"
+                        class="{{ ($payment->midtrans_environment ?? 'sandbox') === 'production' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' }} text-sm font-semibold py-2 px-3 rounded">
+                    Production
+                </button>
+            </form>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <h3 class="text-sm font-semibold text-gray-700 mb-2">App</h3>

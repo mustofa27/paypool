@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class WebPaymentController extends Controller
 {
@@ -56,5 +57,28 @@ class WebPaymentController extends Controller
         $payment->load(['app', 'logs', 'webhookLogs']);
 
         return view('admin.payments.show', compact('payment'));
+    }
+
+    /**
+     * Update the stored Midtrans environment for a payment.
+     */
+    public function updateEnvironment(Request $request, Payment $payment)
+    {
+        $validated = $request->validate([
+            'midtrans_environment' => ['required', Rule::in(['sandbox', 'production'])],
+        ]);
+
+        $payment->update([
+            'midtrans_environment' => $validated['midtrans_environment'],
+        ]);
+
+        $payment->logEvent('environment_updated', [
+            'midtrans_environment' => $validated['midtrans_environment'],
+            'updated_by' => optional(auth()->user())->name,
+        ]);
+
+        return redirect()
+            ->route('admin.payments.show', $payment)
+            ->with('success', 'Payment environment updated successfully.');
     }
 }
