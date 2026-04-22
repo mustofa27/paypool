@@ -47,6 +47,11 @@
             </div>
 
             <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Midtrans Environment</h3>
+                <p class="text-gray-900 text-sm capitalize">{{ $app->midtrans_environment ?? config('midtrans.default_environment', 'sandbox') }}</p>
+            </div>
+
+            <div>
                 <h3 class="text-sm font-semibold text-gray-700 mb-2">Webhook URL</h3>
                 <p class="text-gray-900 text-sm">{{ $app->webhook_url ?: 'Not set' }}</p>
             </div>

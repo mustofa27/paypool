@@ -125,11 +125,12 @@ class TestPaymentController extends Controller
                 'success_redirect_url' => url('/test-payment/success'),
                 'failure_redirect_url' => url('/test-payment/failure'),
                 'unfinish_redirect_url' => url('/test-payment/unfinish'),
-            ]);
+            ], $app->midtrans_environment);
 
             // Create payment record
             $payment = Payment::create([
                 'app_id' => $app->id,
+                'midtrans_environment' => $app->midtrans_environment ?? config('midtrans.default_environment', 'sandbox'),
                 'external_id' => $externalId,
                 'amount' => $validated['amount'],
                 'currency' => 'IDR',

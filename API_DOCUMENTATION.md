@@ -66,7 +66,8 @@ Content-Type: application/json
 {
   "name": "My E-commerce App",
   "description": "Main e-commerce platform",
-  "webhook_url": "https://myapp.com/webhooks/payment"
+  "webhook_url": "https://myapp.com/webhooks/payment",
+  "midtrans_environment": "sandbox"
 }
 ```
 
@@ -80,6 +81,7 @@ Content-Type: application/json
     "name": "My E-commerce App",
     "description": "Main e-commerce platform",
     "webhook_url": "https://myapp.com/webhooks/payment",
+    "midtrans_environment": "sandbox",
     "access_token": "abc123...xyz789",
     "is_active": true,
     "created_at": "2024-02-05T10:00:00.000000Z"
@@ -107,6 +109,7 @@ Content-Type: application/json
 
 {
   "name": "Updated App Name",
+  "midtrans_environment": "production",
   "is_active": false
 }
 ```
@@ -220,7 +223,7 @@ Authorization: Bearer {app_access_token}
 
 #### List Payments
 ```http
-GET /api/v1/payments?status=paid&start_date=2024-02-01&per_page=15
+GET /api/v1/payments?status=paid&midtrans_environment=sandbox&start_date=2024-02-01&per_page=15
 Authorization: Bearer {app_access_token}
 ```
 

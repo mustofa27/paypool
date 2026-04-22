@@ -8,7 +8,7 @@
 
     <!-- Search and Filter -->
     <div class="bg-white shadow rounded-lg p-4 mb-6">
-        <form method="GET" action="{{ route('admin.payments.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <form method="GET" action="{{ route('admin.payments.index') }}" class="grid grid-cols-1 md:grid-cols-6 gap-4">
             <input type="text" 
                    name="search" 
                    placeholder="Search..." 
@@ -21,6 +21,12 @@
                 <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
                 <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expired</option>
                 <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Failed</option>
+            </select>
+
+            <select name="midtrans_environment" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <option value="">All Environments</option>
+                <option value="sandbox" {{ request('midtrans_environment') == 'sandbox' ? 'selected' : '' }}>Sandbox</option>
+                <option value="production" {{ request('midtrans_environment') == 'production' ? 'selected' : '' }}>Production</option>
             </select>
 
             <input type="date" 
@@ -48,6 +54,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">App</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Environment</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -69,6 +76,9 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {{ number_format($payment->amount, 0) }} {{ $payment->currency }}
                     </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
+                        {{ $payment->midtrans_environment ?? 'sandbox' }}
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                             @if($payment->status == 'paid') bg-green-100 text-green-800
@@ -89,7 +99,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
                         <i class="fas fa-inbox text-4xl mb-4 block"></i>
                         No payments found
                     </td>

@@ -10,6 +10,7 @@ class Payment extends Model
 {
     protected $fillable = [
         'app_id',
+        'midtrans_environment',
         'external_id',
         'midtrans_transaction_id',
         'amount',

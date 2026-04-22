@@ -54,6 +54,7 @@ class PaymentController extends Controller
             // Create payment record
             $payment = Payment::create([
                 'app_id' => $app->id,
+                'midtrans_environment' => $app->midtrans_environment ?? config('midtrans.default_environment', 'sandbox'),
                 'external_id' => $request->external_id,
                 'amount' => $request->amount,
                 'currency' => $request->currency ?? 'IDR',
@@ -76,7 +77,7 @@ class PaymentController extends Controller
                 'description' => $request->description ?? 'Payment',
                 'success_redirect_url' => $request->success_redirect_url ?? $app->success_redirect_url,
                 'failure_redirect_url' => $request->failure_redirect_url ?? $app->failure_redirect_url,
-            ]);
+            ], $app->midtrans_environment);
 
             // Update payment with Midtrans data
             $payment->update([
@@ -100,6 +101,7 @@ class PaymentController extends Controller
                     'amount' => $payment->amount,
                     'currency' => $payment->currency,
                     'status' => $payment->status,
+                    'midtrans_environment' => $payment->midtrans_environment,
                     'payment_url' => $transactionData['redirect_url'] ?? $transactionData['payment_url'] ?? null,
                     'expired_at' => $payment->expired_at,
                 ],
@@ -190,6 +192,7 @@ class PaymentController extends Controller
                 'payment_method' => $payment->payment_method,
                 'paid_at' => $payment->paid_at,
                 'expired_at' => $payment->expired_at,
+                'midtrans_environment' => $payment->midtrans_environment,
                 'metadata' => $payment->metadata,
                 'created_at' => $payment->created_at,
             ],
@@ -209,6 +212,11 @@ class PaymentController extends Controller
         // Filter by status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        // Filter by Midtrans environment
+        if ($request->filled('midtrans_environment')) {
+            $query->where('midtrans_environment', $request->midtrans_environment);
         }
 
         // Date range
@@ -257,7 +265,7 @@ class PaymentController extends Controller
         try {
             // Cancel transaction in Midtrans
             if ($payment->midtrans_transaction_id) {
-                $this->midtransService->cancelTransaction($payment->midtrans_transaction_id);
+                $this->midtransService->cancelTransaction($payment->midtrans_transaction_id, $app->midtrans_environment);
             }
 
             $payment->markAsExpired();

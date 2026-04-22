@@ -9,21 +9,40 @@ use Illuminate\Support\Facades\Log;
 
 class MidtransService
 {
-	protected string $serverKey;
-	protected string $baseUrl;
-
-	public function __construct()
+	/**
+	 * Resolve and validate the Midtrans environment config.
+	 */
+	protected function getEnvironmentConfig(?string $environment = null): array
 	{
-		$this->serverKey = config('midtrans.server_key');
-		$this->baseUrl = config('midtrans.base_url');
+		$resolvedEnvironment = $environment ?: config('midtrans.default_environment', 'sandbox');
+		if (!in_array($resolvedEnvironment, ['sandbox', 'production'], true)) {
+			$resolvedEnvironment = 'sandbox';
+		}
+
+		$config = config("midtrans.environments.{$resolvedEnvironment}", []);
+		$serverKey = $config['server_key'] ?? null;
+		$snapBaseUrl = isset($config['snap_base_url']) ? rtrim($config['snap_base_url'], '/') : null;
+		$apiBaseUrl = isset($config['api_base_url']) ? rtrim($config['api_base_url'], '/') : null;
+
+		if (empty($serverKey) || empty($snapBaseUrl) || empty($apiBaseUrl)) {
+			throw new Exception("Midtrans configuration for '{$resolvedEnvironment}' is incomplete.");
+		}
+
+		return [
+			'environment' => $resolvedEnvironment,
+			'server_key' => $serverKey,
+			'snap_base_url' => $snapBaseUrl,
+			'api_base_url' => $apiBaseUrl,
+		];
 	}
 
 	/**
 	 * Create a transaction in Midtrans
 	 */
-	public function createTransaction(array $data): array
+	public function createTransaction(array $data, ?string $environment = null): array
 	{
 		try {
+			$environmentConfig = $this->getEnvironmentConfig($environment);
 			$payload = [
 				'transaction_details' => [
 					'order_id' => $data['external_id'],
@@ -64,15 +83,22 @@ class MidtransService
 			// Add redirect URLs if provided (Snap supports finish/cancel callbacks)
 			if (!empty($data['success_redirect_url'])) {
 				$payload['callbacks']['finish'] = $data['success_redirect_url'];
+			} elseif (!empty(config('midtrans.redirects.success_url'))) {
+				$payload['callbacks']['finish'] = config('midtrans.redirects.success_url');
 			}
 			if (!empty($data['failure_redirect_url'])) {
 				$payload['callbacks']['error'] = $data['failure_redirect_url'];
+			} elseif (!empty(config('midtrans.redirects.failure_url'))) {
+				$payload['callbacks']['error'] = config('midtrans.redirects.failure_url');
 			}
 
-			Log::info('Midtrans Snap transaction request', ['payload' => $payload]);
+			Log::info('Midtrans Snap transaction request', [
+				'environment' => $environmentConfig['environment'],
+				'payload' => $payload,
+			]);
 
-			$response = Http::withBasicAuth($this->serverKey, '')
-				->post("{$this->baseUrl}/v1/transactions", $payload);
+			$response = Http::withBasicAuth($environmentConfig['server_key'], '')
+				->post("{$environmentConfig['snap_base_url']}/v1/transactions", $payload);
 
 			if ($response->failed()) {
 				Log::error('Midtrans transaction creation failed', [
@@ -86,6 +112,7 @@ class MidtransService
 		} catch (Exception $e) {
 			Log::error('Midtrans transaction creation error', [
 				'error' => $e->getMessage(),
+				'environment' => $environment,
 				'data' => $data,
 			]);
 			throw $e;
@@ -95,11 +122,12 @@ class MidtransService
 	/**
 	 * Get transaction status from Midtrans
 	 */
-	public function getTransactionStatus(string $orderId): array
+	public function getTransactionStatus(string $orderId, ?string $environment = null): array
 	{
 		try {
-			$response = Http::withBasicAuth($this->serverKey, '')
-				->get("{$this->baseUrl}/v2/{$orderId}/status");
+			$environmentConfig = $this->getEnvironmentConfig($environment);
+			$response = Http::withBasicAuth($environmentConfig['server_key'], '')
+				->get("{$environmentConfig['api_base_url']}/v2/{$orderId}/status");
 
 			if ($response->failed()) {
 				throw new Exception('Failed to get transaction status');
@@ -109,6 +137,7 @@ class MidtransService
 		} catch (Exception $e) {
 			Log::error('Midtrans get transaction status error', [
 				'error' => $e->getMessage(),
+				'environment' => $environment,
 				'order_id' => $orderId,
 			]);
 			throw $e;
@@ -118,11 +147,12 @@ class MidtransService
 	/**
 	 * Cancel a transaction in Midtrans
 	 */
-	public function cancelTransaction(string $orderId): array
+	public function cancelTransaction(string $orderId, ?string $environment = null): array
 	{
 		try {
-			$response = Http::withBasicAuth($this->serverKey, '')
-				->post("{$this->baseUrl}/v2/{$orderId}/cancel");
+			$environmentConfig = $this->getEnvironmentConfig($environment);
+			$response = Http::withBasicAuth($environmentConfig['server_key'], '')
+				->post("{$environmentConfig['api_base_url']}/v2/{$orderId}/cancel");
 
 			if ($response->failed()) {
 				throw new Exception('Failed to cancel transaction');
@@ -132,6 +162,7 @@ class MidtransService
 		} catch (Exception $e) {
 			Log::error('Midtrans cancel transaction error', [
 				'error' => $e->getMessage(),
+				'environment' => $environment,
 				'order_id' => $orderId,
 			]);
 			throw $e;
@@ -141,10 +172,11 @@ class MidtransService
 	/**
 	 * Verify webhook signature (Midtrans uses HTTP Basic Auth or signature header)
 	 */
-	public function verifyWebhookSignature(string $payload, string $signature): bool
+	public function verifyWebhookSignature(string $payload, string $signature, ?string $environment = null): bool
 	{
 		// Midtrans recommends validating signature/key or using server key for webhook
-		$serverKey = config('midtrans.server_key');
+		$environmentConfig = $this->getEnvironmentConfig($environment);
+		$serverKey = $environmentConfig['server_key'];
 		// Example: compare signature header or use hash_hmac if needed
 		// For now, just check if signature matches server key (simple demo)
 		return hash_equals($serverKey, $signature);

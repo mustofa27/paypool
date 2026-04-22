@@ -18,7 +18,7 @@ Uses Bearer token authentication.
 
 The token is issued in the Paypool admin panel when creating an application.
 
-## 3) Redirect URLs
+## 3) Redirect URLs & Webhook Handling
 Redirect URLs control where users are sent after payment completion. There are two levels of configuration:
 
 **App-Level Defaults (Admin Panel):**
@@ -32,7 +32,33 @@ When creating a payment, you can pass `success_redirect_url` and `failure_redire
 2. App's default URLs (from admin panel)
 3. No redirect (payment completes on Midtrans payment page)
 
+**Important:**
+- Redirect URLs are for user experience only. They do NOT affect payment status updates in Paypool.
+- Payment status is updated by the Midtrans webhook, which must be configured to point to your Paypool server (see below).
+
 **Example Scenarios:**
+## 4) Webhook Handling (REQUIRED for Status Updates)
+
+Paypool updates payment status based on the Midtrans webhook/callback, not the user redirect. You must configure your Midtrans account to send payment notifications (webhook) to your Paypool server. This ensures payment status is always accurate, even if the user does not return to your app.
+
+**Webhook Endpoint:**
+```
+POST https://your-paypool-domain.com/webhook/midtrans
+```
+
+**Supported Midtrans Statuses:**
+- `settlement`, `capture`, `paid`, `settled` → marked as paid
+- `expired` → marked as expired
+- `failed` → marked as failed
+- All other statuses are logged for reference
+
+**Webhook Security:**
+- Paypool does not require a custom signature header. Standard Midtrans HTTP Basic Auth is sufficient.
+- The webhook handler supports both `external_id` and `order_id` fields to match payments.
+
+**If you set redirect URLs to your own app:**
+- Paypool will still update payment status as long as the webhook is sent to Paypool.
+- Your app can use the webhook from Paypool (see section 8) to receive updates.
 
 *Scenario A: Using app defaults*
 - App configured with: `success_redirect_url: https://app.example.com/success`
@@ -153,6 +179,7 @@ Returns the Snap payment page URL for a pending payment, so users can continue a
 
 **Query Parameters (optional):**
 - `status` (pending|paid|expired|failed)
+- `midtrans_environment` (sandbox|production)
 - `start_date` (YYYY-MM-DD)
 - `end_date` (YYYY-MM-DD)
 - `per_page` (number, default 15)
@@ -162,8 +189,8 @@ Returns the Snap payment page URL for a pending payment, so users can continue a
 
 Only payments with `pending` status can be cancelled.
 
-## 8) Webhook to Your Application
-Paypool will send webhooks to the `webhook_url` configured for your application in the admin panel.
+## 8) Webhook to Your Application (Optional, for Downstream Notification)
+Paypool will send webhooks to the `webhook_url` configured for your application in the admin panel whenever a payment status changes. This allows your app to stay in sync with Paypool's status.
 
 **Payload Format:**
 ```json

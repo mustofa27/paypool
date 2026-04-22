@@ -25,6 +25,11 @@ class PaymentController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Filter by Midtrans environment
+        if ($request->filled('midtrans_environment')) {
+            $query->where('midtrans_environment', $request->midtrans_environment);
+        }
+
         // Search by external_id or customer info
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {

@@ -63,6 +63,11 @@
             </div>
 
             <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Environment</h3>
+                <p class="text-gray-900 capitalize">{{ $payment->midtrans_environment ?? 'sandbox' }}</p>
+            </div>
+
+            <div>
                 <h3 class="text-sm font-semibold text-gray-700 mb-2">Amount</h3>
                 <p class="text-2xl font-bold text-gray-900">{{ number_format($payment->amount, 0) }} {{ $payment->currency }}</p>
             </div>

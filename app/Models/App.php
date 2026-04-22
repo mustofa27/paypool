@@ -16,6 +16,7 @@ class App extends Model
         'webhook_url',
         'success_redirect_url',
         'failure_redirect_url',
+        'midtrans_environment',
         'is_active',
         'created_by',
     ];

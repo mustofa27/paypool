@@ -47,6 +47,7 @@ class AppController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'webhook_url' => 'nullable|url',
+            'midtrans_environment' => 'nullable|in:sandbox,production',
         ]);
 
         if ($validator->fails()) {
@@ -60,6 +61,7 @@ class AppController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'webhook_url' => $request->webhook_url,
+            'midtrans_environment' => $request->midtrans_environment ?? config('midtrans.default_environment', 'sandbox'),
             'access_token' => App::generateAccessToken(),
             'created_by' => $request->user()->id,
             'is_active' => true,
@@ -98,6 +100,7 @@ class AppController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
             'webhook_url' => 'nullable|url',
+            'midtrans_environment' => 'nullable|in:sandbox,production',
             'is_active' => 'sometimes|boolean',
         ]);
 
@@ -112,6 +115,7 @@ class AppController extends Controller
             'name',
             'description',
             'webhook_url',
+            'midtrans_environment',
             'is_active',
         ]));
 

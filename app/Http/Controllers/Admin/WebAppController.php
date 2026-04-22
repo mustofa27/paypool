@@ -50,6 +50,7 @@ class WebAppController extends Controller
             'webhook_url' => 'nullable|url',
             'success_redirect_url' => 'nullable|url',
             'failure_redirect_url' => 'nullable|url',
+            'midtrans_environment' => 'nullable|in:sandbox,production',
         ]);
 
         $app = App::create([
@@ -58,6 +59,7 @@ class WebAppController extends Controller
             'webhook_url' => $validated['webhook_url'] ?? null,
             'success_redirect_url' => $validated['success_redirect_url'] ?? null,
             'failure_redirect_url' => $validated['failure_redirect_url'] ?? null,
+            'midtrans_environment' => $validated['midtrans_environment'] ?? config('midtrans.default_environment', 'sandbox'),
             'access_token' => App::generateAccessToken(),
             'created_by' => auth()->id(),
             'is_active' => true,
@@ -103,6 +105,7 @@ class WebAppController extends Controller
             'webhook_url' => 'nullable|url',
             'success_redirect_url' => 'nullable|url',
             'failure_redirect_url' => 'nullable|url',
+            'midtrans_environment' => 'nullable|in:sandbox,production',
             'is_active' => 'nullable|boolean',
         ]);
 

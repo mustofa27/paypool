@@ -23,6 +23,10 @@ class WebPaymentController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('midtrans_environment')) {
+            $query->where('midtrans_environment', $request->midtrans_environment);
+        }
+
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('external_id', 'like', '%' . $request->search . '%')
