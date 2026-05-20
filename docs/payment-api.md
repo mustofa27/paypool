@@ -3,11 +3,15 @@
 This document describes how to integrate your application with Paypool to create and manage payments through Midtrans.
 
 ## 1) Base URL
-Use your Paypool server address, for example:
-- http://localhost (local)
-- https://paypool.yourdomain.com (production)
+The live Paypool server is hosted at:
+
+```
+https://paypool.icminovasi.my.id
+```
 
 All API endpoints below are prefixed with `/api/v1`.
+
+**Full example:** `https://paypool.icminovasi.my.id/api/v1/payments/create`
 
 ## 2) Authentication
 Uses Bearer token authentication.
@@ -18,7 +22,31 @@ Uses Bearer token authentication.
 
 The token is issued in the Paypool admin panel when creating an application.
 
-## 3) Redirect URLs & Webhook Handling
+## 3) Sandbox vs Production Environment
+
+Paypool supports both Midtrans **sandbox** (for testing) and **production** (for live payments). The environment is configured **inside Paypool** by the Paypool administrator — not in your application and not via API parameters. Your API calls are identical regardless of environment; the environment is already determined by how your application is registered in Paypool.
+
+### How It Works
+
+Each application registered in Paypool has a **Midtrans Environment** setting (`sandbox` or `production`). When you create a payment using your access token, Paypool automatically routes the request to the correct Midtrans environment based on that setting.
+
+To switch your application between sandbox and production, contact the **Paypool administrator** and request a change to your application's environment setting.
+
+### Environment Behaviour
+
+| Setting | Midtrans API | `invoice_url` domain | Real money? |
+|---|---|---|---|
+| `sandbox` | `api.sandbox.midtrans.com` | `app.sandbox.midtrans.com` | No |
+| `production` | `api.midtrans.com` | `app.midtrans.com` | **Yes** |
+
+**Tips:**
+- Request two separate application registrations from the Paypool admin — one for sandbox and one for production. Each will have its own access token, keeping your test and live traffic fully separated.
+- The environment used for a payment is recorded on the payment record and visible via the List Payments API (`midtrans_environment` filter).
+- The `invoice_url` in the payment creation response will reflect the correct Midtrans environment automatically.
+
+---
+
+## 4) Redirect URLs & Webhook Handling
 Redirect URLs control where users are sent after payment completion. There are two levels of configuration:
 
 **App-Level Defaults (Admin Panel):**
@@ -37,14 +65,16 @@ When creating a payment, you can pass `success_redirect_url` and `failure_redire
 - Payment status is updated by the Midtrans webhook, which must be configured to point to your Paypool server (see below).
 
 **Example Scenarios:**
-## 4) Webhook Handling (REQUIRED for Status Updates)
+## 5) Webhook Handling (REQUIRED for Status Updates)
 
 Paypool updates payment status based on the Midtrans webhook/callback, not the user redirect. You must configure your Midtrans account to send payment notifications (webhook) to your Paypool server. This ensures payment status is always accurate, even if the user does not return to your app.
 
 **Webhook Endpoint:**
 ```
-POST https://your-paypool-domain.com/webhook/midtrans
+POST https://paypool.icminovasi.my.id/webhook/midtrans
 ```
+
+Configure this URL in your **Midtrans Dashboard → Settings → Configuration → Payment Notification URL** for both sandbox and production if needed.
 
 **Supported Midtrans Statuses:**
 - `settlement`, `capture`, `paid`, `settled` → marked as paid
@@ -74,6 +104,8 @@ POST https://your-paypool-domain.com/webhook/midtrans
 - App A configured with: `success_redirect_url: https://appa.com/success`
 - App B configured with: `success_redirect_url: https://appb.com/success`
 - Result: Each app's users redirected to their own URLs
+
+## 5a) Create Payment
 
 **POST** `/api/v1/payments/create`
 
@@ -129,10 +161,12 @@ POST https://your-paypool-domain.com/webhook/midtrans
 - If `success_redirect_url`/`failure_redirect_url` are not provided, Paypool uses the URLs configured for your application in the admin panel.
 - `external_id` must be unique within your application.
 
-## 5) Get Payment by external_id
+## 6) Get Payment by external_id
 
-## 5a) Continue Payment (Snap Redirect URL)
+## 6a) Continue Payment (Snap Redirect URL)
 **GET** `/api/v1/payments/{externalId}/continue`
+
+**Full URL example:** `https://paypool.icminovasi.my.id/api/v1/payments/ORDER-10001/continue`
 
 Returns the Snap payment page URL for a pending payment, so users can continue an unfinished payment.
 
@@ -151,6 +185,8 @@ Returns the Snap payment page URL for a pending payment, so users can continue a
   "message": "Payment is not pending or cannot be continued"
 }
 ```
+## 6b) Get Payment Detail
+
 **GET** `/api/v1/payments/{externalId}`
 
 **Example Response (200):**
@@ -174,7 +210,7 @@ Returns the Snap payment page URL for a pending payment, so users can continue a
 }
 ```
 
-## 6) List Payments
+## 7) List Payments
 **GET** `/api/v1/payments`
 
 **Query Parameters (optional):**
@@ -184,12 +220,12 @@ Returns the Snap payment page URL for a pending payment, so users can continue a
 - `end_date` (YYYY-MM-DD)
 - `per_page` (number, default 15)
 
-## 7) Cancel Payment
+## 8) Cancel Payment
 **POST** `/api/v1/payments/{externalId}/cancel`
 
 Only payments with `pending` status can be cancelled.
 
-## 8) Webhook to Your Application (Optional, for Downstream Notification)
+## 9) Webhook to Your Application (Optional, for Downstream Notification)
 Paypool will send webhooks to the `webhook_url` configured for your application in the admin panel whenever a payment status changes. This allows your app to stay in sync with Paypool's status.
 
 **Payload Format:**
@@ -216,7 +252,7 @@ Paypool will send webhooks to the `webhook_url` configured for your application 
 - Validate using `external_id` and status.
 - Handle duplicate webhooks idempotently.
 
-## 9) Errors
+## 10) Errors
 **401** — Invalid token
 
 **422** — Validation errors
@@ -233,7 +269,7 @@ Paypool will send webhooks to the `webhook_url` configured for your application 
 }
 ```
 
-## 10) Recommended Flow
+## 11) Recommended Flow
 1. Create payment via `/payments/create`
 2. Redirect user to `invoice_url` (Midtrans payment page)
 3. Wait for webhook `payment.updated`
