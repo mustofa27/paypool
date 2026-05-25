@@ -191,11 +191,25 @@
                         <p class="text-sm text-gray-500 mt-1">{{ $webhook->created_at->format('M d, Y H:i:s') }}</p>
                     </div>
                 </div>
+                @if($webhook->payload)
+                <details class="mt-2 group">
+                    <summary class="cursor-pointer text-sm font-semibold text-gray-700 hover:text-gray-900 list-none flex items-center">
+                        <span>Payload</span>
+                        <span class="ml-2 text-xs text-gray-500 group-open:hidden">(show)</span>
+                        <span class="ml-2 text-xs text-gray-500 hidden group-open:inline">(hide)</span>
+                    </summary>
+                    <pre class="bg-gray-100 p-3 rounded text-xs mt-1 overflow-x-auto">{{ json_encode($webhook->payload, JSON_PRETTY_PRINT) }}</pre>
+                </details>
+                @endif
                 @if($webhook->response)
-                <div class="mt-2">
-                    <p class="text-sm font-semibold text-gray-700">Response:</p>
+                <details class="mt-2 group">
+                    <summary class="cursor-pointer text-sm font-semibold text-gray-700 hover:text-gray-900 list-none flex items-center">
+                        <span>Response</span>
+                        <span class="ml-2 text-xs text-gray-500 group-open:hidden">(show)</span>
+                        <span class="ml-2 text-xs text-gray-500 hidden group-open:inline">(hide)</span>
+                    </summary>
                     <pre class="bg-gray-100 p-3 rounded text-xs mt-1 overflow-x-auto">{{ json_encode($webhook->response, JSON_PRETTY_PRINT) }}</pre>
-                </div>
+                </details>
                 @endif
             </div>
             @endforeach
